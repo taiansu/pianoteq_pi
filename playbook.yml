@@ -1,0 +1,142 @@
+---
+- hosts: all
+  vars:
+    setup_dac: true
+
+  tasks:
+
+  - name: Update APT package cache
+    become: yes
+    apt: update_cache=yes cache_valid_time=600
+    tags:
+      - os
+
+  - name: Upgrade APT to the latest packages
+    become: yes
+    apt: upgrade=dist autoremove=yes
+    register: apt_result
+    tags:
+      - os
+
+  - name: Purge residual kernel packages
+    become: yes
+    shell: apt-get remove -y --purge $(dpkg -l | grep "^rc\s*linux-image-" | awk '{print $2}' | tr '\n' ' ')
+    register: apt_result
+    changed_when: "'packages will be REMOVED' in apt_result.stdout"
+    tags:
+      - os
+
+  - name: Install packages
+    become: yes
+    apt:
+      name: ['p7zip-full', 'cpufrequtils', 'vim']
+      state: present
+    tags:
+      - os
+
+  - name: Elevate account privileges
+    become: yes
+    blockinfile:
+      path: /etc/security/limits.conf
+      block: |
+        @pi              -       rtprio          90
+        @pi              -       nice            -10
+        @pi              -       memlock         500000
+      backup: yes
+    tags:
+      - os
+
+  - name: Set maximum CPU Frequency
+    command: cpufreq-set -f 1500MHz
+    become: yes
+    tags:
+      - os
+
+  - name: include dac setup if enabled
+    include_tasks: dac.yml
+    when: setup_dac
+
+  - name: Cleanup exist installation
+    file:
+      path: '/home/pi/Pianoteq 6 STAGE'
+      state: absent
+    tags:
+      - pianoteq
+      - install
+
+  - name: Find Pianoteq on host
+    set_fact:
+      pianoteq_app: "{{ item }}"
+    with_fileglob: ['library/pianoteq*.7z']
+    tags:
+      - pianoteq
+      - install
+
+  - name: Copy Pianoteq
+    copy:
+      src: "{{ pianoteq_app }}"
+      dest: '/home/pi/Downloads'
+    tags:
+      - pianoteq
+      - install
+
+  - name: Extract Pianoteq
+    command: 7za x /home/pi/Downloads/{{ pianoteq_app | basename }}
+    tags:
+      - pianoteq
+      - install
+
+  - name: Copy Pianoteq execute shell
+    copy:
+      src: ./library/Pianoteq 6 Stage.sh
+      dest: '/home/pi/Pianoteq 6 STAGE/arm'
+      mode: 0755
+    tags:
+      - pianoteq
+      - config
+
+  - name: Copy Pianoteq icon
+    copy:
+      src: ./library/pianoteq_icon_128.png
+      dest: '/home/pi/Pianoteq 6 STAGE/arm'
+      mode: 0644
+    tags:
+      - pianoteq
+      - config
+
+  - name: Copy Pianoteq desktop shortcut
+    copy:
+      src: ./library/Pianoteq 6 Stage.desktop
+      dest: '/home/pi/Desktop'
+      mode: 0744
+    tags:
+      - pianoteq
+      - config
+
+  - name: Create autostart link
+    become: yes
+    file:
+      src: '/home/pi/Desktop/Pianoteq 6 Stage.desktop'
+      dest: '/etc/xdg/autostart/Pianoteq 6 Stage.desktop'
+      state: link
+    tags:
+      - pianoteq
+      - config
+
+  - name: Change desktop font color
+    lineinfile:
+      path: /home/pi/.config/pcmanfm/LXDE-pi/desktop-items-0.conf
+      regexp: 'desktop_fg'
+      line: 'desktop_fg=#000000000000'
+    tags:
+      - config
+
+  - name: Reboot host and wait for it to restart
+    become: yes
+    reboot:
+      msg: "Reboot initiated by Ansible"
+      connect_timeout: 5
+      reboot_timeout: 600
+      pre_reboot_delay: 0
+      post_reboot_delay: 1
+      test_command: whoami

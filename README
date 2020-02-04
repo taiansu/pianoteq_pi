@@ -1,0 +1,25 @@
+# Setup a Raspberry pi with Pianoteq 6
+
+## Step 1:
+  Flash sd card
+
+## Step 2:
+  On Raspberry pi:
+  1. put sd card in
+  2. plug in keyboard, mouse and monitor
+  3. connect to wifi
+  4. find the ip, which we will use it when back to host
+  5. enable ssh conect
+
+## Step 3:
+  On host:
+  1. ssh-copy-id to put your ssh key into raspberry pi
+  2. clone this project to your computer
+  3. download a pianoteq linux version, put the .7z file into **library** folder of this project
+  4. change the $your_raspberry_ip_here variable in **inventory** file with the value your observed on step 2.4
+  5. install ansible if you didn't with: `brew install ansible`
+  6. run following command:
+
+  ```shell
+  $ ansible-playbook -i inventory playbook.yml
+  ```

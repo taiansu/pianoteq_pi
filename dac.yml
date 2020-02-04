@@ -1,0 +1,41 @@
+- name: Comment out line in /etc/modules for DAC
+  become: yes
+  replace:
+    path: /etc/modules
+    regexp: '(snd_bcm2835)'
+    replace: '#\1'
+  tags:
+    - dac
+
+- name: Add lines to /etc/modules for DAC
+  become: yes
+  blockinfile:
+    path: /etc/modules
+    block: |
+      bcm2708_dmaengine
+      snd_soc_pcm512x
+      snd_soc_hifiberry_dacplus
+      snd_soc_bcm2708_i2s
+  tags:
+    - dac
+
+- name: Add lines to /boot/config
+  become: yes
+  blockinfile:
+    path: /boot/config.txt
+    block: |
+      dtparam=i2c_arm=on
+      dtparam=i2s=on
+      dtoverlay=hifiberry-dacplus
+  tags:
+    - dac
+
+- name: Copy asound.conf file
+  become: yes
+  copy:
+    src: library/asound.conf
+    dest: /etc
+    mode: 0755
+  tags:
+    - dac
+
