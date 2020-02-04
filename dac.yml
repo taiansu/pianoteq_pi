@@ -1,3 +1,4 @@
+---
 - name: Comment out line in /etc/modules for DAC
   become: yes
   replace:
