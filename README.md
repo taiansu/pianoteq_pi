@@ -18,7 +18,7 @@
   2. clone this project to your computer
   3. download a pianoteq linux version, put the .7z file into **library** folder of this project
   4. change the $your_raspberry_ip_here variable in **inventory** file with the value your observed on step 2.5
-  5. install ansible if you didn't with: `brew install ansible`
+  5. install ansible if you don't have it via command: `brew install ansible`
   6. run following command:
 
   ```shell
