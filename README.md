@@ -25,12 +25,15 @@
   $ ansible-playbook -i inventory playbook.yml
   ```
 
+  Then wait for the device reboot
+
   Note: Some step (especially for the first time while updating the system) might take 10 mins+, so be patient.
 
 ## Step 4:
   On Raspberry pi:
   1. activate your pianoteq with your serial number
-  2. config input, output and MIDI settings
+  2. Connect the speaker/headphone, MIDI controller keyboard
+  3. Config input, output and MIDI settings in the Pianoteq setting menu.
 
-  and make some noise with fun
+  And time to make some noise with fun.
 
