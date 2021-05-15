@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.1
+Name=Pianoteq
+Type=Application
+Comment=Start Pianoteq
+Categories=Application
+Exec=/home/pi/'Pianoteq 7 STAGE'/arm-32bit/'Pianoteq 7 STAGE'
+Terminal=false
+StartupNotify=true
+Icon=/home/pi/Pianoteq 7 STAGE/arm-32bit/pianoteq_icon_128.png

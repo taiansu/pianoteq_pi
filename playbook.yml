@@ -1,7 +1,7 @@
 ---
 - hosts: all
   vars:
-    setup_dac: false
+    setup_dac: true
 
   tasks:
 
@@ -50,7 +50,7 @@
 
   - name: Cleanup exist installation
     file:
-      path: '/home/pi/Pianoteq 6 STAGE'
+      path: '/home/pi/Pianoteq 7 STAGE'
       state: absent
     tags:
       - pianoteq
@@ -80,8 +80,8 @@
 
   - name: Copy Pianoteq execute shell
     copy:
-      src: ./library/Pianoteq 6 Stage.sh
-      dest: '/home/pi/Pianoteq 6 STAGE/arm'
+      src: ./library/Pianoteq.sh
+      dest: '/home/pi/Pianoteq 7 STAGE/arm'
       mode: 0755
     tags:
       - pianoteq
@@ -90,7 +90,7 @@
   - name: Copy Pianoteq icon
     copy:
       src: ./library/pianoteq_icon_128.png
-      dest: '/home/pi/Pianoteq 6 STAGE/arm'
+      dest: '/home/pi/Pianoteq 7 STAGE/arm-32bit'
       mode: 0644
     tags:
       - pianoteq
@@ -98,7 +98,7 @@
 
   - name: Copy Pianoteq desktop shortcut
     copy:
-      src: ./library/Pianoteq 6 Stage.desktop
+      src: ./library/Pianoteq.desktop
       dest: '/home/pi/Desktop'
       mode: 0744
     tags:
@@ -108,20 +108,20 @@
   - name: Create autostart link
     become: yes
     file:
-      src: '/home/pi/Desktop/Pianoteq 6 Stage.desktop'
-      dest: '/etc/xdg/autostart/Pianoteq 6 Stage.desktop'
+      src: '/home/pi/Desktop/Pianoteq.desktop'
+      dest: '/etc/xdg/autostart/Pianoteq.desktop'
       state: link
     tags:
       - pianoteq
       - config
 
-  - name: Change desktop font color
-    lineinfile:
-      path: /home/pi/.config/pcmanfm/LXDE-pi/desktop-items-0.conf
-      regexp: 'desktop_fg'
-      line: 'desktop_fg=#000000000000'
-    tags:
-      - config
+  # - name: Change desktop font color
+  #   lineinfile:
+  #     path: /home/pi/.config/pcmanfm/LXDE-pi/desktop-items-0.conf
+  #     regexp: 'desktop_fg'
+  #     line: 'desktop_fg=#000000000000'
+  #   tags:
+  #     - config
 
   - name: Reboot host and wait for it to restart
     become: yes
