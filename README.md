@@ -10,11 +10,12 @@
   3. plug the power cord
   4. connect to wifi
   5. find the ip, which we will use it when back to host
-  6. enable ssh conect
+  6. enable ssh conect in the GUI, Preferences -> Raspberry Pi Configuration -> Interfaces -> SSH ->
+     Enabled
 
 ## Step 3:
   On host:
-  1. ssh-copy-id to put your ssh key into raspberry pi
+  1. ssh-copy-id to put your ssh key into raspberry pi via `ssh-copy-id -i ~/.ssh/id_rsa.pub pi@the_ip_addr_above`
   2. clone this project to your computer
   3. download a pianoteq linux version, put the .7z file into **library** folder of this project
   4. change the $your_raspberry_ip_here variable in **inventory** file with the value your observed on step 2.5
