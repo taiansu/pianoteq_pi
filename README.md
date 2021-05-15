@@ -10,8 +10,11 @@
   3. plug the power cord
   4. connect to wifi
   5. find the ip, which we will use it when back to host
-  6. enable ssh conect in the GUI, Preferences -> Raspberry Pi Configuration -> Interfaces -> SSH ->
-     Enabled
+  6. Enable SSH. Open terminal, type commands underneath:
+
+      ```bash
+      sudo systemctl enable ssh && sudo systemctl start ssh
+      ```
 
 ## Step 3:
   On host:
