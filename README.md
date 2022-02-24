@@ -1,7 +1,7 @@
 # Setup a Raspberry pi with Pianoteq 6
 
 ## Step 1:
-  Flash a SD card with newest Raspbian Buster with desktop version
+  Flash a SD card with newest [Raspbian OS with desktop version](https://www.raspberrypi.com/software/)
 
 ## Step 2:
   On Raspberry pi:
