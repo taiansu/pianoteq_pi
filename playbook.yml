@@ -1,134 +1,146 @@
 ---
 - hosts: all
   vars:
+    ansible_python_interpreter: /usr/bin/python
     setup_dac: true
+    target_user: "{{ ansible_user | default('pi') }}"
 
   tasks:
+    - name: Update APT package cache
+      become: true
+      apt: update_cache=yes cache_valid_time=600
+      tags:
+        - os
 
-  - name: Update APT package cache
-    become: yes
-    apt: update_cache=yes cache_valid_time=600
-    tags:
-      - os
+    - name: Upgrade APT to the latest packages
+      become: true
+      apt: upgrade=dist autoremove=yes
+      register: apt_result
+      tags:
+        - os
 
-  - name: Upgrade APT to the latest packages
-    become: yes
-    apt: upgrade=dist autoremove=yes
-    register: apt_result
-    tags:
-      - os
+    - name: Install packages
+      become: true
+      apt:
+        name: ["p7zip-full", "cpufrequtils", "vim"]
+        state: present
+      tags:
+        - os
 
-  - name: Install packages
-    become: yes
-    apt:
-      name: ['p7zip-full', 'cpufrequtils', 'vim']
-      state: present
-    tags:
-      - os
+    - name: Elevate account privileges
+      become: true
+      blockinfile:
+        path: /etc/security/limits.conf
+        block: |
+          @{{ target_user }}     -       rtprio          90
+          @{{ target_user }}     -       nice            -10
+          @{{ target_user }}     -       memlock         512000
+        backup: yes
+      tags:
+        - os
 
-  - name: Elevate account privileges
-    become: yes
-    blockinfile:
-      path: /etc/security/limits.conf
-      block: |
-        @pi              -       rtprio          90
-        @pi              -       nice            -10
-        @pi              -       memlock         512000
-      backup: yes
-    tags:
-      - os
+    - name: include dac setup if enabled
+      include_tasks: dac.yml
+      when: setup_dac
+      tags:
+        - dac
 
-  - name: Set maximum CPU Frequency
-    command: cpufreq-set -f 1500MHz
-    become: yes
-    tags:
-      - os
+    - name: Cleanup exist installation
+      file:
+        path: "/home/{{ target_user }}/Pianoteq {item}"
+        state: absent
+      with_items:
+        - '7 STAGE'
+        - '7'
+        - '8 STAGE'
+        - '8'
+      tags:
+        - pianoteq
+        - install
 
-  - name: include dac setup if enabled
-    include_tasks: dac.yml
-    when: setup_dac
+    - name: Find Pianoteq on host
+      set_fact:
+        pianoteq_app: "{{ item }}"
+      with_fileglob: ["library/pianoteq*.7z"]
+      tags:
+        - pianoteq
+        - install
 
-  - name: Cleanup exist installation
-    file:
-      path: '/home/pi/Pianoteq 7 STAGE'
-      state: absent
-    tags:
-      - pianoteq
-      - install
+    - name: Copy Pianoteq
+      copy:
+        src: "{{ pianoteq_app }}"
+        dest: "/home/{{ target_user }}/Downloads"
+      tags:
+        - pianoteq
+        - install
 
-  - name: Find Pianoteq on host
-    set_fact:
-      pianoteq_app: "{{ item }}"
-    with_fileglob: ['library/pianoteq*.7z']
-    tags:
-      - pianoteq
-      - install
+    - name: Extract Pianoteq
+      command: 7za x /home/{{ target_user }}/Downloads/{{ pianoteq_app | basename }}
+      args:
+        chdir: "/home/{{ target_user }}"
+      tags:
+        - pianoteq
+        - install
 
-  - name: Copy Pianoteq
-    copy:
-      src: "{{ pianoteq_app }}"
-      dest: '/home/pi/Downloads'
-    tags:
-      - pianoteq
-      - install
+    - name: Copy Pianoteq execute shell
+      copy:
+        src: ./library/Pianoteq.sh
+        dest: "/home/{{ target_user }}/Pianoteq 8/arm-64bit"
+        mode: 0755
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      tags:
+        - pianoteq
+        - config
 
-  - name: Extract Pianoteq
-    command: 7za x /home/pi/Downloads/{{ pianoteq_app | basename }}
-    tags:
-      - pianoteq
-      - install
+    - name: Copy Pianoteq icon
+      copy:
+        src: ./library/pianoteq_icon_128.png
+        dest: "/home/{{ target_user }}/Pianoteq 8/arm-64bit"
+        mode: 0644
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      tags:
+        - pianoteq
+        - config
 
-  - name: Copy Pianoteq execute shell
-    copy:
-      src: ./library/Pianoteq.sh
-      dest: '/home/pi/Pianoteq 7 STAGE/arm'
-      mode: 0755
-    tags:
-      - pianoteq
-      - config
+    - name: Generate Pianoteq desktop shortcut
+      template:
+        src: ./library/Pianoteq.desktop.j2
+        dest: "/home/{{ target_user }}/Desktop/Pianoteq.desktop"
+        mode: 0744
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      tags:
+        - pianoteq
+        - config
 
-  - name: Copy Pianoteq icon
-    copy:
-      src: ./library/pianoteq_icon_128.png
-      dest: '/home/pi/Pianoteq 7 STAGE/arm-32bit'
-      mode: 0644
-    tags:
-      - pianoteq
-      - config
+    - name: Create autostart link
+      become: true
+      file:
+        src: "/home/{{ target_user }}/Desktop/Pianoteq.desktop"
+        dest: "/etc/xdg/autostart/Pianoteq.desktop"
+        state: link
+      tags:
+        - pianoteq
+        - config
 
-  - name: Copy Pianoteq desktop shortcut
-    copy:
-      src: ./library/Pianoteq.desktop
-      dest: '/home/pi/Desktop'
-      mode: 0744
-    tags:
-      - pianoteq
-      - config
+    # - name: Change desktop font color
+    #   lineinfile:
+    #     path: /home/pi/.config/pcmanfm/LXDE-pi/desktop-items-0.conf
+    #     regexp: 'desktop_fg'
+    #     line: 'desktop_fg=#000000000000'
+    #   tags:
+    #     - config
 
-  - name: Create autostart link
-    become: yes
-    file:
-      src: '/home/pi/Desktop/Pianoteq.desktop'
-      dest: '/etc/xdg/autostart/Pianoteq.desktop'
-      state: link
-    tags:
-      - pianoteq
-      - config
-
-  # - name: Change desktop font color
-  #   lineinfile:
-  #     path: /home/pi/.config/pcmanfm/LXDE-pi/desktop-items-0.conf
-  #     regexp: 'desktop_fg'
-  #     line: 'desktop_fg=#000000000000'
-  #   tags:
-  #     - config
-
-  - name: Reboot host and wait for it to restart
-    become: yes
-    reboot:
-      msg: "Reboot initiated by Ansible"
-      connect_timeout: 5
-      reboot_timeout: 600
-      pre_reboot_delay: 0
-      post_reboot_delay: 1
-      test_command: whoami
+    - name: Reboot host and wait for it to restart
+      become: true
+      reboot:
+        msg: "Reboot initiated by Ansible"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 1
+        test_command: whoami
+      tags:
+        - reboot

@@ -1,6 +1,6 @@
 ---
 - name: Comment out line in /etc/modules for DAC
-  become: yes
+  become: true
   replace:
     path: /etc/modules
     regexp: '(snd_bcm2835)'
@@ -9,7 +9,7 @@
     - dac
 
 - name: Add lines to /etc/modules for DAC
-  become: yes
+  become: true
   blockinfile:
     path: /etc/modules
     block: |
@@ -20,10 +20,10 @@
   tags:
     - dac
 
-- name: Add lines to /boot/config
-  become: yes
+- name: Add lines to /boot/firmware/config.txt
+  become: true
   blockinfile:
-    path: /boot/config.txt
+    path: /boot/firmware/config.txt
     block: |
       dtparam=i2c_arm=on
       dtparam=i2s=on
@@ -32,7 +32,7 @@
     - dac
 
 - name: Copy asound.conf file
-  become: yes
+  become: true
   copy:
     src: library/asound.conf
     dest: /etc
