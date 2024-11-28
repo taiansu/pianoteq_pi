@@ -1,2 +1,2 @@
 [raspberry_pi]
-$your_raspberry_ip_here ansible_user=pi
+{{ lookup('env', 'PI_IP') | default('192.168.2.1') }} ansible_user=pi
